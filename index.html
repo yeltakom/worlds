@@ -44,6 +44,12 @@
             }
 
             // 3 küp oluşturma
+            const positions = [
+                new THREE.Vector3( -1, 0, 0 ), // İlk küp pozisyonu
+                new THREE.Vector3( 1, 0, 0 ),  // İkinci küp pozisyonu
+                new THREE.Vector3( 0, 0, 0 )   // Üçüncü küp pozisyonu
+            ];
+
             for ( let i = 0; i < 3; i++ ) {
 
                 // Eşit boyutta küpler
@@ -61,10 +67,13 @@
                 // Mesh oluşturma
                 const cube = new THREE.Mesh( geometry, materials );
 
-                // Aynı pozisyonda yerleştirme (birbirlerine girmiş olacaklar)
-                cube.position.set( 0, 0, 0 );
+                // Pozisyon atama (önceki pozisyonların iki katı uzaklıkta)
+                cube.position.copy( positions[i].multiplyScalar(2) );
 
-                // Daha yavaş dönüş hızı
+                // Küplerin hala kesişmesi için boyutlarını biraz artırabiliriz
+                cube.scale.set( 1.2, 1.2, 1.2 );
+
+                // Dönüş hızı
                 cube.userData.rotationSpeed = {
                     x: ( Math.random() * 0.002 + 0.001 ), // 0.001 ile 0.003 arasında
                     y: ( Math.random() * 0.002 + 0.001 ),
