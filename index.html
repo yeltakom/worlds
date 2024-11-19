@@ -1,128 +1,241 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>three.js - Rastgele Texture'lı Küpler</title>
+    <title>three.js webgl - interactive cubes with random textures</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
     <style>
-      /* Sayfanın kenar boşluklarını sıfırlama ve taşmayı gizleme */
-      body { margin: 0; overflow: hidden; }
+      body {
+        margin: 0;
+        background-color: #000; /* Arka planı siyah yaptık */
+        overflow: hidden;
+      }
     </style>
   </head>
   <body>
+    <div id="container"></div>
 
-    <!-- Üç.js modülünü import etmek için importmap kullanıyoruz -->
     <script type="importmap">
       {
         "imports": {
-          "three": "https://unpkg.com/three@0.150.1/build/three.module.js"
+          "three": "https://unpkg.com/three@0.150.1/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.150.1/examples/jsm/"
         }
       }
     </script>
 
-    <!-- Ana JavaScript kodumuz -->
     <script type="module">
-
-      // Üç.js kütüphanesini içe aktarma
       import * as THREE from 'three';
 
-      let camera, scene, renderer;
+      import Stats from 'three/addons/libs/stats.module.js';
+
+      import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
+
+      let container, stats;
+      let camera, controls, scene, renderer;
+      let pickingTexture, pickingScene;
+      let highlightBox;
+
+      const pickingData = [];
+
+      const pointer = new THREE.Vector2();
+      const offset = new THREE.Vector3(10, 10, 10);
 
       init();
-      animate();
 
       function init() {
+        container = document.getElementById('container');
 
-        // Kamera oluşturma ve konumlandırma
-        camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
-        camera.position.set( 0, 200, 400 );
+        camera = new THREE.PerspectiveCamera(
+          70,
+          window.innerWidth / window.innerHeight,
+          1,
+          10000
+        );
+        camera.position.z = 1000;
 
-        // Sahne oluşturma
         scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000000); // Arka planı siyah yaptık
 
-        // Arka planı siyah yapma
-        scene.background = new THREE.Color( 0x000000 );
+        scene.add(new THREE.AmbientLight(0xcccccc));
 
-        // Işıklandırma ekleme
-        const ambientLight = new THREE.AmbientLight( 0xffffff, 0.5 );
-        scene.add( ambientLight );
+        const light = new THREE.DirectionalLight(0xffffff, 3);
+        light.position.set(0, 500, 2000);
+        scene.add(light);
 
-        const pointLight = new THREE.PointLight( 0xffffff, 1 );
-        camera.add( pointLight );
-        scene.add( camera );
-
-        // Küp geometrisi oluşturma
-        const geometry = new THREE.BoxGeometry( 100, 100, 100 );
-
-        // Texture'ları yükleme ve materyalleri oluşturma
+        // Texture'ları yükleme
         const textureLoader = new THREE.TextureLoader();
         const textures = [];
 
         // 6 adet texture'ı yükle ve diziye ekle
-        for ( let i = 1; i <= 6; i++ ) {
-          const texture = textureLoader.load( `textures/texture${i}.jpg` );
-          textures.push( texture );
+        for (let i = 1; i <= 6; i++) {
+          const texture = textureLoader.load(`textures/texture${i}.jpg`);
+          textures.push(texture);
         }
 
-        // Materyalleri oluşturma
-        const materials = textures.map( tex => {
-          return new THREE.MeshPhongMaterial( { map: tex } );
-        } );
+        // Picking sahnesi
+        pickingScene = new THREE.Scene();
+        pickingTexture = new THREE.WebGLRenderTarget(1, 1);
 
-        // Küplerin pozisyonlarını belirleme
-        const positions = [
-          [-150, 0, 50], [-50, 0, 50], [50, 0, 50],
-          [-150, 0, -50], [-50, 0, -50], [50, 0, -50]
-        ];
+        const geometries = [];
+        const matrix = new THREE.Matrix4();
+        const quaternion = new THREE.Quaternion();
 
-        // Küpleri oluşturma ve sahneye ekleme
-        positions.forEach( pos => {
-          // Rastgele bir materyal seç
-          const randomIndex = Math.floor( Math.random() * materials.length );
-          const material = materials[randomIndex];
+        // Küp sayısını performans için azalttık (örneğin, 100)
+        const numCubes = 100;
 
-          const cube = new THREE.Mesh( geometry, material );
-          cube.position.set( pos[0], pos[1], pos[2] );
-          scene.add( cube );
-        } );
+        for (let i = 0; i < numCubes; i++) {
+          const geometry = new THREE.BoxGeometry();
 
-        // Renderer oluşturma ve sayfaya ekleme
-        renderer = new THREE.WebGLRenderer( { antialias: true } );
-        renderer.setPixelRatio( window.devicePixelRatio );
-        renderer.setSize( window.innerWidth, window.innerHeight );
-        document.body.appendChild( renderer.domElement );
+          const position = new THREE.Vector3();
+          position.x = Math.random() * 10000 - 5000;
+          position.y = Math.random() * 6000 - 3000;
+          position.z = Math.random() * 8000 - 4000;
 
-        // Pencere boyutu değiştiğinde ayarları güncelleme
-        window.addEventListener( 'resize', onWindowResize );
+          const rotation = new THREE.Euler();
+          rotation.x = Math.random() * 2 * Math.PI;
+          rotation.y = Math.random() * 2 * Math.PI;
+          rotation.z = Math.random() * 2 * Math.PI;
 
+          const scale = new THREE.Vector3();
+          scale.x = Math.random() * 200 + 100;
+          scale.y = Math.random() * 200 + 100;
+          scale.z = Math.random() * 200 + 100;
+
+          quaternion.setFromEuler(rotation);
+          matrix.compose(position, quaternion, scale);
+
+          geometry.applyMatrix4(matrix);
+
+          // Rastgele bir texture seç ve materyal oluştur
+          const randomIndex = Math.floor(Math.random() * textures.length);
+          const texture = textures[randomIndex];
+          const material = new THREE.MeshPhongMaterial({ map: texture });
+
+          // Mesh oluştur ve sahneye ekle
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.userData.id = i;
+          scene.add(mesh);
+
+          // Picking için mesh oluştur ve picking sahnesine ekle
+          const pickingMaterial = new THREE.MeshBasicMaterial({
+            color: new THREE.Color(i / numCubes, 0, 0),
+          });
+          const pickingMesh = new THREE.Mesh(geometry, pickingMaterial);
+          pickingMesh.userData.id = i;
+          pickingScene.add(pickingMesh);
+
+          // Picking verilerini sakla
+          pickingData[i] = {
+            position: position,
+            rotation: rotation,
+            scale: scale,
+          };
+        }
+
+        // Highlight kutusu
+        highlightBox = new THREE.Mesh(
+          new THREE.BoxGeometry(),
+          new THREE.MeshLambertMaterial({ color: 0xffff00 })
+        );
+        scene.add(highlightBox);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setAnimationLoop(animate);
+        container.appendChild(renderer.domElement);
+
+        controls = new TrackballControls(camera, renderer.domElement);
+        controls.rotateSpeed = 1.0;
+        controls.zoomSpeed = 1.2;
+        controls.panSpeed = 0.8;
+        controls.noZoom = false;
+        controls.noPan = false;
+        controls.staticMoving = true;
+        controls.dynamicDampingFactor = 0.3;
+
+        stats = new Stats();
+        container.appendChild(stats.dom);
+
+        renderer.domElement.addEventListener('pointermove', onPointerMove);
+
+        window.addEventListener('resize', onWindowResize);
       }
 
       function onWindowResize() {
-
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
 
-        renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
 
+      function onPointerMove(e) {
+        pointer.x = e.clientX;
+        pointer.y = e.clientY;
       }
 
       function animate() {
-
-        requestAnimationFrame( animate );
-
-        // Küpleri döndürme
-        scene.traverse( function ( object ) {
-          if ( object.isMesh ) {
-            object.rotation.x += 0.01;
-            object.rotation.y += 0.01;
-          }
-        } );
-
-        renderer.render( scene, camera );
-
+        controls.update();
+        pick();
+        renderer.render(scene, camera);
+        stats.update();
       }
 
-    </script>
+      function pick() {
+        // Mouse koordinatlarını hesapla
+        const pixelRatio = renderer.getPixelRatio();
+        const mouseX = pointer.x * pixelRatio;
+        const mouseY =
+          renderer.domElement.height - pointer.y * pixelRatio;
 
+        // Kamera görünüm ofsetini ayarla
+        camera.setViewOffset(
+          renderer.domElement.width,
+          renderer.domElement.height,
+          mouseX | 0,
+          mouseY | 0,
+          1,
+          1
+        );
+
+        // Picking sahnesini render et
+        renderer.setRenderTarget(pickingTexture);
+        renderer.render(pickingScene, camera);
+        renderer.setRenderTarget(null);
+
+        // Kamera görünüm ofsetini sıfırla
+        camera.clearViewOffset();
+
+        // Piksel verisini oku
+        const pixelBuffer = new Uint8Array(4);
+        renderer.readRenderTargetPixels(
+          pickingTexture,
+          0,
+          0,
+          1,
+          1,
+          pixelBuffer
+        );
+
+        // ID'yi piksel renginden al
+        const id =
+          (pixelBuffer[0] << 16) | (pixelBuffer[1] << 8) | pixelBuffer[2];
+
+        if (id > 0 && pickingData[id]) {
+          // Highlight kutusunu seçilen objeye taşı
+          const data = pickingData[id];
+          highlightBox.position.copy(data.position);
+          highlightBox.rotation.copy(data.rotation);
+          highlightBox.scale.copy(data.scale).add(offset);
+          highlightBox.visible = true;
+        } else {
+          highlightBox.visible = false;
+        }
+      }
+    </script>
   </body>
 </html>
