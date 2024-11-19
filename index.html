@@ -2,7 +2,9 @@
 <html lang="en">
   <head>
     <title>three.js webgl - interactive cubes with random textures</title>
-    <meta charset="utf-8">
+    <meta
+      charset="utf-8"
+    />
     <meta
       name="viewport"
       content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
@@ -81,11 +83,12 @@
         pickingTexture = new THREE.WebGLRenderTarget(1, 1);
 
         const geometries = [];
+        const pickingGeometries = [];
         const matrix = new THREE.Matrix4();
         const quaternion = new THREE.Quaternion();
 
-        // Küp sayısını performans için azalttık (örneğin, 100)
-        const numCubes = 100;
+        // Kutu sayısını artırdık
+        const numCubes = 500;
 
         for (let i = 0; i < numCubes; i++) {
           const geometry = new THREE.BoxGeometry();
@@ -113,7 +116,10 @@
           // Rastgele bir texture seç ve materyal oluştur
           const randomIndex = Math.floor(Math.random() * textures.length);
           const texture = textures[randomIndex];
-          const material = new THREE.MeshPhongMaterial({ map: texture });
+          const material = new THREE.MeshPhongMaterial({
+            map: texture,
+            shininess: 0, // Parlaklığı azalttık
+          });
 
           // Mesh oluştur ve sahneye ekle
           const mesh = new THREE.Mesh(geometry, material);
@@ -189,8 +195,7 @@
         // Mouse koordinatlarını hesapla
         const pixelRatio = renderer.getPixelRatio();
         const mouseX = pointer.x * pixelRatio;
-        const mouseY =
-          renderer.domElement.height - pointer.y * pixelRatio;
+        const mouseY = renderer.domElement.height - pointer.y * pixelRatio;
 
         // Kamera görünüm ofsetini ayarla
         camera.setViewOffset(
