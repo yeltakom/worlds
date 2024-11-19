@@ -12,7 +12,7 @@
     <style>
       body {
         margin: 0;
-        background-color: #000; /* Arka planı siyah yaptık */
+        background-color: #000; /* Arka planı siyah */
         overflow: hidden;
       }
     </style>
@@ -60,13 +60,14 @@
         camera.position.z = 1000;
 
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x000000); // Arka planı siyah yaptık
+        scene.background = new THREE.Color(0x000000); // Arka planı siyah
 
-        scene.add(new THREE.AmbientLight(0xcccccc));
+        // Işıklandırmayı kaldırıyoruz çünkü MeshBasicMaterial ışıklardan etkilenmez
+        // scene.add(new THREE.AmbientLight(0xcccccc));
 
-        const light = new THREE.DirectionalLight(0xffffff, 3);
-        light.position.set(0, 500, 2000);
-        scene.add(light);
+        // const light = new THREE.DirectionalLight(0xffffff, 3);
+        // light.position.set(0, 500, 2000);
+        // scene.add(light);
 
         // Texture'ları yükleme
         const textureLoader = new THREE.TextureLoader();
@@ -87,8 +88,8 @@
         const matrix = new THREE.Matrix4();
         const quaternion = new THREE.Quaternion();
 
-        // Kutu sayısını artırdık
-        const numCubes = 2500;
+        // Kutu sayısını artırdık (örneğin, 500)
+        const numCubes = 5000;
 
         for (let i = 0; i < numCubes; i++) {
           const geometry = new THREE.BoxGeometry();
@@ -116,9 +117,8 @@
           // Rastgele bir texture seç ve materyal oluştur
           const randomIndex = Math.floor(Math.random() * textures.length);
           const texture = textures[randomIndex];
-          const material = new THREE.MeshPhongMaterial({
+          const material = new THREE.MeshBasicMaterial({
             map: texture,
-            shininess: 0, // Parlaklığı azalttık
           });
 
           // Mesh oluştur ve sahneye ekle
@@ -145,7 +145,7 @@
         // Highlight kutusu
         highlightBox = new THREE.Mesh(
           new THREE.BoxGeometry(),
-          new THREE.MeshLambertMaterial({ color: 0xffff00 })
+          new THREE.MeshBasicMaterial({ color: 0xffff00 })
         );
         scene.add(highlightBox);
 
