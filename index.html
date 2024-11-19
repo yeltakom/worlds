@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>three.js - Rastgele Texture'lı ve Dönen 8 Küp</title>
+    <title>three.js - Rastgele Texture'lı ve Dönen 3 Küp</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <style>
@@ -43,11 +43,11 @@
                 textures.push( texture );
             }
 
-            // 8 küp oluşturma
+            // 3 küp oluşturma
             for ( let i = 0; i < 3; i++ ) {
 
-                // Rastgele boyut
-                const size = Math.random() * 1 + 0.5; // 0.5 ile 1.5 arasında
+                // Eşit boyutta küpler
+                const size = 1; // Sabit boyut
 
                 const geometry = new THREE.BoxGeometry( size, size, size );
 
@@ -61,16 +61,14 @@
                 // Mesh oluşturma
                 const cube = new THREE.Mesh( geometry, materials );
 
-                // Rastgele konumlandırma (birbirleriyle örtüşebilir)
-                cube.position.x = ( Math.random() - 0.5 ) * 4; // -2 ile 2 arasında
-                cube.position.y = ( Math.random() - 0.5 ) * 4;
-                cube.position.z = ( Math.random() - 0.5 ) * 4;
+                // Aynı pozisyonda yerleştirme (birbirlerine girmiş olacaklar)
+                cube.position.set( 0, 0, 0 );
 
-                // Her küp için rastgele eksenlerde dönüş hızı (mevcut hızın dörtte biri)
+                // Daha yavaş dönüş hızı
                 cube.userData.rotationSpeed = {
-                    x: ( Math.random() * 0.005 + 0.0025 ), // 0.0025 ile 0.0075 arasında
-                    y: ( Math.random() * 0.005 + 0.0025 ),
-                    z: ( Math.random() * 0.005 + 0.0025 )
+                    x: ( Math.random() * 0.002 + 0.001 ), // 0.001 ile 0.003 arasında
+                    y: ( Math.random() * 0.002 + 0.001 ),
+                    z: ( Math.random() * 0.002 + 0.001 )
                 };
 
                 scene.add( cube );
