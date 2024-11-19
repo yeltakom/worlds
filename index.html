@@ -5,11 +5,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
+      /* Sayfanın kenar boşluklarını sıfırlama ve taşmayı gizleme */
       body { margin: 0; overflow: hidden; }
     </style>
   </head>
   <body>
 
+    <!-- Üç.js modülünü import etmek için importmap kullanıyoruz -->
     <script type="importmap">
       {
         "imports": {
@@ -18,8 +20,10 @@
       }
     </script>
 
+    <!-- Ana JavaScript kodumuz -->
     <script type="module">
 
+      // Üç.js kütüphanesini içe aktarma
       import * as THREE from 'three';
 
       let camera, scene, renderer;
@@ -29,7 +33,7 @@
 
       function init() {
 
-        // Kamera oluşturma
+        // Kamera oluşturma ve konumlandırma
         camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
         camera.position.set( 0, 200, 400 );
 
@@ -39,7 +43,7 @@
         // Arka planı siyah yapma
         scene.background = new THREE.Color( 0x000000 );
 
-        // Işıklandırma
+        // Işıklandırma ekleme
         const ambientLight = new THREE.AmbientLight( 0xffffff, 0.5 );
         scene.add( ambientLight );
 
@@ -47,7 +51,7 @@
         camera.add( pointLight );
         scene.add( camera );
 
-        // Geometry oluşturma
+        // Küp geometrisi oluşturma
         const geometry = new THREE.BoxGeometry( 100, 100, 100 );
 
         // Texture'ları yükleme ve materyalleri oluşturma
@@ -65,12 +69,13 @@
           return new THREE.MeshPhongMaterial( { map: tex } );
         } );
 
-        // Küplerin pozisyonları
+        // Küplerin pozisyonlarını belirleme
         const positions = [
           [-150, 0, 50], [-50, 0, 50], [50, 0, 50],
           [-150, 0, -50], [-50, 0, -50], [50, 0, -50]
         ];
 
+        // Küpleri oluşturma ve sahneye ekleme
         positions.forEach( pos => {
           // Rastgele bir materyal seç
           const randomIndex = Math.floor( Math.random() * materials.length );
@@ -81,7 +86,7 @@
           scene.add( cube );
         } );
 
-        // Renderer oluşturma
+        // Renderer oluşturma ve sayfaya ekleme
         renderer = new THREE.WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
