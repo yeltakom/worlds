@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>three.js - Rastgele Texture'lı Küpler</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      body { margin: 0; overflow: hidden; }
+    </style>
+  </head>
+  <body>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.150.1/build/three.module.js"
+        }
+      }
+    </script>
+
+    <script type="module">
+
+      import * as THREE from 'three';
+
+      let camera, scene, renderer;
+
+      init();
+      animate();
+
+      function init() {
+
+        // Kamera oluşturma
+        camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+        camera.position.set( 0, 200, 400 );
+
+        // Sahne oluşturma
+        scene = new THREE.Scene();
+
+        // Arka planı siyah yapma
+        scene.background = new THREE.Color( 0x000000 );
+
+        // Işıklandırma
+        const ambientLight = new THREE.AmbientLight( 0xffffff, 0.5 );
+        scene.add( ambientLight );
+
+        const pointLight = new THREE.PointLight( 0xffffff, 1 );
+        camera.add( pointLight );
+        scene.add( camera );
+
+        // Geometry oluşturma
+        const geometry = new THREE.BoxGeometry( 100, 100, 100 );
+
+        // Texture'ları yükleme ve materyalleri oluşturma
+        const textureLoader = new THREE.TextureLoader();
+        const textures = [];
+
+        // 6 adet texture'ı yükle ve diziye ekle
+        for ( let i = 1; i <= 6; i++ ) {
+          const texture = textureLoader.load( `textures/texture${i}.jpg` );
+          textures.push( texture );
+        }
+
+        // Materyalleri oluşturma
+        const materials = textures.map( tex => {
+          return new THREE.MeshPhongMaterial( { map: tex } );
+        } );
+
+        // Küplerin pozisyonları
+        const positions = [
+          [-150, 0, 50], [-50, 0, 50], [50, 0, 50],
+          [-150, 0, -50], [-50, 0, -50], [50, 0, -50]
+        ];
+
+        positions.forEach( pos => {
+          // Rastgele bir materyal seç
+          const randomIndex = Math.floor( Math.random() * materials.length );
+          const material = materials[randomIndex];
+
+          const cube = new THREE.Mesh( geometry, material );
+          cube.position.set( pos[0], pos[1], pos[2] );
+          scene.add( cube );
+        } );
+
+        // Renderer oluşturma
+        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        document.body.appendChild( renderer.domElement );
+
+        // Pencere boyutu değiştiğinde ayarları güncelleme
+        window.addEventListener( 'resize', onWindowResize );
+
+      }
+
+      function onWindowResize() {
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize( window.innerWidth, window.innerHeight );
+
+      }
+
+      function animate() {
+
+        requestAnimationFrame( animate );
+
+        // Küpleri döndürme
+        scene.traverse( function ( object ) {
+          if ( object.isMesh ) {
+            object.rotation.x += 0.01;
+            object.rotation.y += 0.01;
+          }
+        } );
+
+        renderer.render( scene, camera );
+
+      }
+
+    </script>
+
+  </body>
+</html>
